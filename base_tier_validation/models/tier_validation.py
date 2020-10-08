@@ -134,9 +134,12 @@ class TierValidation(models.AbstractModel):
 
     def evaluate_tier(self, tier):
         domain = []
-        if tier.definition_domain:
-            domain = literal_eval(tier.definition_domain)
-        return self.search([("id", "=", self.id)] + domain)
+        for rec in self:
+            if rec.id:
+                if tier.definition_domain:
+                    domain = literal_eval(tier.definition_domain)
+                return self.search([("id", "=", rec.id)] + domain)
+        return domain
 
     @api.model
     def _get_under_validation_exceptions(self):
@@ -217,7 +220,7 @@ class TierValidation(models.AbstractModel):
         if hasattr(self, post):
             # Notify state change
             getattr(self, post)(
-                subtype=self._get_accepted_notification_subtype(),
+                subtype_xmlid=self._get_accepted_notification_subtype(),
                 body=self._notify_accepted_reviews_body(),
             )
 
@@ -282,7 +285,7 @@ class TierValidation(models.AbstractModel):
         if hasattr(self, post):
             # Notify state change
             getattr(self, post)(
-                subtype=self._get_rejected_notification_subtype(),
+                subtype_xmlid=self._get_rejected_notification_subtype(),
                 body=self._notify_rejected_review_body(),
             )
 
@@ -319,7 +322,7 @@ class TierValidation(models.AbstractModel):
                     partner_ids=users_to_notify.mapped("partner_id").ids
                 )
                 getattr(rec, post)(
-                    subtype="mt_comment", body=rec._notify_requested_review_body()
+                    subtype_xmlid="mt_comment", body=rec._notify_requested_review_body()
                 )
 
     def request_validation(self):
